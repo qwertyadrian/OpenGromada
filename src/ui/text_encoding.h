@@ -4,6 +4,7 @@
 #include <ctype.h>
 #include <stddef.h>
 #include <string.h>
+#include <string>
 
 namespace TEXT_ENCODING
 {
@@ -35,6 +36,68 @@ inline unsigned char UnicodeToCp1251(unsigned int p_codepoint)
 		}
 	}
 	return (unsigned char) '?';
+}
+
+inline void AppendUtf8(std::string& p_out, unsigned int p_codepoint)
+{
+	if (p_codepoint < 0x80) {
+		p_out += (char) p_codepoint;
+	}
+	else if (p_codepoint < 0x800) {
+		p_out += (char) (0xc0 | (p_codepoint >> 6));
+		p_out += (char) (0x80 | (p_codepoint & 0x3f));
+	}
+	else {
+		p_out += (char) (0xe0 | (p_codepoint >> 12));
+		p_out += (char) (0x80 | ((p_codepoint >> 6) & 0x3f));
+		p_out += (char) (0x80 | (p_codepoint & 0x3f));
+	}
+}
+
+inline std::string Cp1251ToUtf8(const char* p_value)
+{
+	static const unsigned short special[64] = {
+		0x0402, 0x0403, 0x201a, 0x0453, 0x201e, 0x2026, 0x2020, 0x2021, 0x20ac, 0x2030, 0x0409, 0x2039, 0x040a,
+		0x040c, 0x040b, 0x040f, 0x0452, 0x2018, 0x2019, 0x201c, 0x201d, 0x2022, 0x2013, 0x2014, 0xfffd, 0x2122,
+		0x0459, 0x203a, 0x045a, 0x045c, 0x045b, 0x045f, 0x00a0, 0x040e, 0x045e, 0x0408, 0x00a4, 0x0490, 0x00a6,
+		0x00a7, 0x0401, 0x00a9, 0x0404, 0x00ab, 0x00ac, 0x00ad, 0x00ae, 0x0407, 0x00b0, 0x00b1, 0x0406, 0x0456,
+		0x0491, 0x00b5, 0x00b6, 0x00b7, 0x0451, 0x2116, 0x0454, 0x00bb, 0x0458, 0x0405, 0x0455, 0x0457
+	};
+
+	if (!p_value) {
+		return {};
+	}
+	std::string result;
+	result.reserve(strlen(p_value) * 2);
+	for (const unsigned char* p = (const unsigned char*) p_value; *p; ++p) {
+		unsigned int codepoint = *p;
+		if (*p >= 0xc0) {
+			codepoint = 0x0410 + (*p - 0xc0);
+		}
+		else if (*p >= 0x80) {
+			codepoint = special[*p - 0x80];
+		}
+		AppendUtf8(result, codepoint);
+	}
+	return result;
+}
+
+inline bool IsUtf8(const char* p_text)
+{
+	if (!p_text) {
+		return true;
+	}
+	for (const unsigned char* p = (const unsigned char*) p_text; *p; ++p) {
+		if (*p >= 0x80) {
+			if (*p >= 0xc2 && *p <= 0xf4) {
+				if ((*(p + 1) & 0xc0) == 0x80) {
+					return true;
+				}
+			}
+			return false;
+		}
+	}
+	return true;
 }
 
 inline bool IsContinuation(unsigned char p_byte)

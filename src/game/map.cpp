@@ -32,6 +32,7 @@
 #include "sprite/ex_sprite_data.h"
 #include "sprite/r_map.h"
 #include "ui/mouse.h"
+#include "ui/text_encoding.h"
 #include "util/crc32.h"
 #include "util/game_random.h"
 #include "util/myerror.h"
@@ -3112,7 +3113,45 @@ VID** MAP::ExecFunc(int p_cmd)
 	case 172: { // script: Format(fmt, arg) - printf-style with one string or int argument
 		if (m_logic.m_stack.IsLastString()) {
 			STRING arg(*PopStr());
-			PushStr(Printf(PopStr()->m_str, arg.m_str));
+			const char* fmt = PopStr()->m_str;
+			if (!fmt || !*fmt) {
+				PushStr(STRING());
+			}
+			else {
+				int byteLen = (int) strlen(arg.m_str);
+				int glyphLen = TEXT_ENCODING::LegacyLength(arg.m_str);
+				int delta = byteLen - glyphLen;
+				if (delta > 0) {
+					std::string adjustedFmt;
+					for (const char* p = fmt; *p; ++p) {
+						if (*p == '%' && *(p + 1) != '%') {
+							adjustedFmt += *p++;
+							while (*p && (*p == '-' || *p == '+' || *p == ' ' || *p == '0' || *p == '#')) {
+								adjustedFmt += *p++;
+							}
+							if (*p >= '0' && *p <= '9') {
+								char* endPtr = nullptr;
+								long width = strtol(p, &endPtr, 10);
+								adjustedFmt += std::to_string(width + delta);
+								p = endPtr;
+							}
+							while (*p && *p != 's' && *p != '%') {
+								adjustedFmt += *p++;
+							}
+							if (*p) {
+								adjustedFmt += *p;
+							}
+						}
+						else {
+							adjustedFmt += *p;
+						}
+					}
+					PushStr(Printf(adjustedFmt.c_str(), arg.m_str));
+				}
+				else {
+					PushStr(Printf(fmt, arg.m_str));
+				}
+			}
 		}
 		else {
 			int arg = PopInt();
@@ -3293,7 +3332,7 @@ VID** MAP::ExecFunc(int p_cmd)
 		return 0;
 	case 159: // script: StrLen(text)
 	case 205:
-		PushInt((int) PopStr()->Length());
+		PushInt(TEXT_ENCODING::LegacyLength(PopStr()->m_str));
 		return 0;
 	case 206: // script: StrLower(text)
 		PushStr(PopStr()->ToLower());
