@@ -34,6 +34,7 @@
 #include "sprite/sprite.h"
 #include "sprite/stext.h"
 #include "ui/mouse.h"
+#include "ui/text_encoding.h"
 #include "util/game_random.h"
 #include "util/myerror.h"
 #include "util/profile.h"
@@ -378,7 +379,9 @@ MAP::MAP(STRING& p_argv, SETTINGS* p_settings)
 	if (!(graph->m_flags & 0x80)) {
 		Platform_RenderRestoreWindowPosition(windowX, windowY);
 	}
-	SDL_SetWindowTitle((SDL_Window*) m_window, m_title);
+	const std::string titleUtf8 =
+		TEXT_ENCODING::IsUtf8(m_title) ? std::string(m_title) : TEXT_ENCODING::Cp1251ToUtf8(m_title);
+	SDL_SetWindowTitle((SDL_Window*) m_window, titleUtf8.c_str());
 
 	int fontSizeY = profile.GetInt(
 		STRING("graph"),
