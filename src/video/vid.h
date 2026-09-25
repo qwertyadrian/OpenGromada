@@ -80,19 +80,19 @@ public:
 		VID* m_linkVid; // 0x5c
 		VID* m_unk0x5c;
 	};
-	float m_unk0x60;                // 0x60
-	float m_unk0x64;                // 0x64
-	float m_unk0x68;                // 0x68
-	undefined4 m_unk0x6c;           // 0x6c
-	unsigned int m_noDir;           // 0x70
-	int m_noAnimCadr[17];           // 0x74
-	int m_aniSfx[17];               // 0xb8
-	unsigned int m_aniDuration[17]; // 0xfc
-	float m_unk0x140[17];           // 0x140
-	float m_unk0x184[17];           // 0x184
-	float m_unk0x1c8[17];           // 0x1c8
-	int m_unk0x20c[17];             // 0x20c
-	union {                         // 0x250
+	union { float m_topZ; float m_unk0x60; };                 // 0x60
+	union { float m_moveUpZ1; float m_unk0x64; };             // 0x64
+	union { float m_moveUpZ2; float m_unk0x68; };             // 0x68
+	union { unsigned int m_lifetime; undefined4 m_unk0x6c; }; // 0x6c
+	unsigned int m_noDir;                                     // 0x70
+	int m_noAnimCadr[17];                                     // 0x74
+	int m_aniSfx[17];                                         // 0xb8
+	unsigned int m_aniDuration[17];                           // 0xfc
+	union { float m_aniChildX[17]; float m_unk0x140[17]; };   // 0x140
+	union { float m_aniChildY[17]; float m_unk0x184[17]; };   // 0x184
+	union { float m_aniChildZ[17]; float m_unk0x1c8[17]; };   // 0x1c8
+	union { int m_aniChildNvid[17]; int m_unk0x20c[17]; };    // 0x20c
+	union {                                                   // 0x250
 		VID* m_aniChildVid[17];
 		struct {
 			VID* m_unk0x250[8];

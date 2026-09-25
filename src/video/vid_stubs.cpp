@@ -69,15 +69,15 @@ void VID::LoadParameters(RESOURCE* p_res)
 	p_res->ReadWords(&m_unk0x50, 4);
 	p_res->ReadWords(&m_unk0x54, 4);
 	p_res->ReadWords(&m_nLinkVid, 4);
-	p_res->ReadWords(&m_unk0x60, 4);
+	p_res->ReadWords(&m_topZ, 4);
 	if (loco) {
-
-
-
-		m_unk0x64 = m_unk0x68 = 0.0f;
-		m_unk0x6c = 0;
+		// Locoland 28-byte block: mv_up_z1 (float), mv_up_z2 (float), lifetime (uint32),
+		// scale2 (3x float = 12B), padding (4B)
+		p_res->ReadWords(&m_moveUpZ1, 4);
+		p_res->ReadWords(&m_moveUpZ2, 4);
+		p_res->ReadWords(&m_lifetime, 4);
 		m_ext1Property = m_ext2Property = 0;
-		p_res->Skip(28);
+		p_res->Skip(16);
 	}
 	else {
 		p_res->ReadWords(&m_unk0x64, 4);
@@ -92,15 +92,14 @@ void VID::LoadParameters(RESOURCE* p_res)
 	p_res->ReadWords(m_noAnimCadr, 68);
 	p_res->ReadWords(m_aniSfx, 68);
 	if (loco) {
-
-
-		for (auto& duration : m_aniDuration) duration = m_defaultAniPeriod;
+		const unsigned int period = m_defaultAniPeriod ? (unsigned int) m_defaultAniPeriod : 71u;
+		for (auto& duration : m_aniDuration) duration = period;
 	}
 	else p_res->ReadWords(m_aniDuration, 68);
-	p_res->ReadWords(m_unk0x140, 68);
-	p_res->ReadWords(m_unk0x184, 68);
-	p_res->ReadWords(m_unk0x1c8, 68);
-	p_res->ReadWords(m_unk0x20c, 68);
+	p_res->ReadWords(m_aniChildX, 68);
+	p_res->ReadWords(m_aniChildY, 68);
+	p_res->ReadWords(m_aniChildZ, 68);
+	p_res->ReadWords(m_aniChildNvid, 68);
 	p_res->ReadWords(m_aniFireCount, 68);
 
 	int start;
@@ -240,7 +239,7 @@ void VID::LoadParameters(RESOURCE* p_res)
 	int i;
 	for (i = 0; i < 17; ++i) {
 		if (!m_aniDuration[i]) {
-			m_aniDuration[i] = m_defaultAniPeriod;
+			m_aniDuration[i] = m_defaultAniPeriod ? (unsigned int) m_defaultAniPeriod : 71u;
 		}
 	}
 	m_unk0x384 = m_footprintWidth * 0.5f;
