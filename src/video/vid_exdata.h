@@ -20,7 +20,7 @@ public:
 	union { int m_ammoCapacity; int m_maxAmmo; };           // 0x28
 	int m_army;                                             // 0x2c
 	int m_defaultBehavior;                                  // 0x30
-	union { int m_slotId; undefined m_unk0x34[0x4]; };      // 0x34
+	union { int m_iconFrame; undefined m_unk0x34[0x4]; };   // 0x34
 	union { int m_enemyRating; int m_unk0x38; };            // 0x38
 	union { float m_minRange; float m_unk0x3c; };           // 0x3c
 	int m_unk0x40;            // 0x40
