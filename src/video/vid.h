@@ -43,10 +43,10 @@ public:
 
 	int m_idx;              // 0x04
 	char* m_name;           // 0x08
-	unsigned int m_unk0x0c; // 0x0c
-	undefined4 m_sprClass;  // 0x10
-	unsigned int m_flag;    // 0x14
-	int m_unk0x18;          // 0x18
+	union { unsigned int m_sprType; unsigned int m_unk0x0c; }; // 0x0c
+	undefined4 m_sprClass;                                    // 0x10
+	union { unsigned int m_propertyFlags; unsigned int m_flag; }; // 0x14
+	union { int m_moveMask; int m_unk0x18; };                 // 0x18
 	union {
 		undefined m_unk0x1c[0x8];
 		struct {
@@ -54,25 +54,26 @@ public:
 			float m_footprintHeight; // 0x20
 		};
 	};
-	float m_unk0x24; // 0x24
+	union { float m_sizeZ; float m_unk0x24; };                // 0x24
 
-	int m_defaultMaxHp; // 0x28
-	float m_unk0x2c;    // 0x2c
-	float m_unk0x30;    // 0x30
-	float m_unk0x34;    // 0x34
-	float m_unk0x38;    // 0x38
-	float m_unk0x3c;    // 0x3c
+	int m_defaultMaxHp;                                       // 0x28
+	union { float m_maxSpeed; float m_unk0x2c; };             // 0x2c
+	union { float m_maxZSpeed; float m_unk0x30; };            // 0x30
+	union { float m_acceleration; float m_unk0x34; };         // 0x34
+	union { float m_deceleration; float m_unk0x38; };         // 0x38
+	union { float m_rotationPeriod; float m_unk0x3c; };       // 0x3c
 	union {
 		VID* m_weapon; // 0x40
 		VID* m_unk0x40;
 		int m_weaponIdx; // 0x40
 	};
-	float m_blastRadius; // 0x44
-	int m_fireDamage;    // 0x48
-	float m_unk0x4c;     // 0x4c
-	float m_unk0x50;     // 0x50
-	float m_unk0x54;     // 0x54
+	union { float m_deathDamage; float m_blastRadius; };      // 0x44
+	union { int m_deathPush; int m_fireDamage; };             // 0x48
+	union { float m_linkCoorX; float m_unk0x4c; };            // 0x4c
+	union { float m_linkCoorY; float m_unk0x50; };            // 0x50
+	union { float m_linkCoorZ; float m_unk0x54; };            // 0x54
 	union {
+		int m_linkVidIdx;
 		int m_nLinkVid; // 0x58
 		undefined m_unk0x58[4];
 	};

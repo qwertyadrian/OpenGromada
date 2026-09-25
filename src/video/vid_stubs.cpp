@@ -43,31 +43,31 @@ void VID::LoadParameters(RESOURCE* p_res)
 		return;
 	}
 	m_randomSpeed = m_randomZSpeed = 0.0f;
-	p_res->ReadWords(&m_unk0x0c, 4);
+	p_res->ReadWords(&m_sprType, 4);
 	p_res->ReadWords(&m_sprClass, 4);
 	p_res->ReadWords(&m_flag, 4);
-	p_res->ReadWords(&m_unk0x18, 4);
+	p_res->ReadWords(&m_moveMask, 4);
 	p_res->ReadWords(&m_footprintWidth, 4);
 	p_res->ReadWords(&m_footprintHeight, 4);
-	p_res->ReadWords(&m_unk0x24, 4);
+	p_res->ReadWords(&m_sizeZ, 4);
 	p_res->ReadWords(&m_defaultMaxHp, 4);
-	p_res->ReadWords(&m_unk0x2c, 4);
+	p_res->ReadWords(&m_maxSpeed, 4);
 	if (extended) {
 		p_res->ReadWords(&m_randomSpeed, 4);
 	}
-	p_res->ReadWords(&m_unk0x30, 4);
+	p_res->ReadWords(&m_maxZSpeed, 4);
 	if (extended) {
 		p_res->ReadWords(&m_randomZSpeed, 4);
 	}
-	p_res->ReadWords(&m_unk0x34, 4);
-	p_res->ReadWords(&m_unk0x38, 4);
-	p_res->ReadWords(&m_unk0x3c, 4);
+	p_res->ReadWords(&m_acceleration, 4);
+	p_res->ReadWords(&m_deceleration, 4);
+	p_res->ReadWords(&m_rotationPeriod, 4);
 	p_res->ReadWords(&m_weaponIdx, 4);
 	p_res->ReadWords(&m_blastRadius, 4);
 	p_res->ReadWords(&m_fireDamage, 4);
-	p_res->ReadWords(&m_unk0x4c, 4);
-	p_res->ReadWords(&m_unk0x50, 4);
-	p_res->ReadWords(&m_unk0x54, 4);
+	p_res->ReadWords(&m_linkCoorX, 4);
+	p_res->ReadWords(&m_linkCoorY, 4);
+	p_res->ReadWords(&m_linkCoorZ, 4);
 	p_res->ReadWords(&m_nLinkVid, 4);
 	p_res->ReadWords(&m_topZ, 4);
 	if (loco) {
@@ -179,9 +179,9 @@ void VID::LoadParameters(RESOURCE* p_res)
 	if (!p_res->Good()) {
 		return;
 	}
-	const float geometry[] = {m_footprintWidth, m_footprintHeight, m_unk0x24, m_unk0x2c, m_unk0x30,
-		m_randomSpeed, m_randomZSpeed, m_unk0x34, m_unk0x38, m_unk0x3c,
-		m_blastRadius, m_unk0x4c, m_unk0x50, m_unk0x54, m_unk0x60, m_unk0x64, m_unk0x68,
+	const float geometry[] = {m_footprintWidth, m_footprintHeight, m_sizeZ, m_maxSpeed, m_maxZSpeed,
+		m_randomSpeed, m_randomZSpeed, m_acceleration, m_deceleration, m_rotationPeriod,
+		m_blastRadius, m_linkCoorX, m_linkCoorY, m_linkCoorZ, m_topZ, m_moveUpZ1, m_moveUpZ2,
 		m_gammaR, m_gammaG, m_gammaB};
 	for (float value : geometry) {
 		if (!std::isfinite(value)) {
@@ -195,20 +195,20 @@ void VID::LoadParameters(RESOURCE* p_res)
 		m_gammaG = 1.0f;
 		m_gammaR = 1.0f;
 	}
-	if (m_unk0x3c == 999999.0f) {
-		m_unk0x3c = 0.0f;
+	if (m_rotationPeriod == 999999.0f) {
+		m_rotationPeriod = 0.0f;
 	}
-	else if (m_unk0x3c == 0.0f) {
-		m_unk0x3c = 999999.0f;
+	else if (m_rotationPeriod == 0.0f) {
+		m_rotationPeriod = 999999.0f;
 	}
 	else {
-		m_unk0x3c = 256.0f / m_unk0x3c;
+		m_rotationPeriod = 256.0f / m_rotationPeriod;
 	}
-	if (m_unk0x2c != 999999.0f) {
-		m_unk0x2c = m_unk0x2c * 0.001f;
+	if (m_maxSpeed != 999999.0f) {
+		m_maxSpeed = m_maxSpeed * 0.001f;
 	}
-	if (m_unk0x30 != 999999.0f) {
-		m_unk0x30 = m_unk0x30 * 0.001f;
+	if (m_maxZSpeed != 999999.0f) {
+		m_maxZSpeed = m_maxZSpeed * 0.001f;
 	}
 	if (m_randomSpeed != 999999.0f) {
 		m_randomSpeed = m_randomSpeed * 0.001f;
@@ -216,13 +216,13 @@ void VID::LoadParameters(RESOURCE* p_res)
 	if (m_randomZSpeed != 999999.0f) {
 		m_randomZSpeed = m_randomZSpeed * 0.001f;
 	}
-	if (m_unk0x34 != 999999.0f) {
-		m_unk0x34 = m_unk0x34 * 0.000001f;
+	if (m_acceleration != 999999.0f) {
+		m_acceleration = m_acceleration * 0.000001f;
 	}
-	if (m_unk0x38 != 999999.0f) {
-		m_unk0x38 = m_unk0x38 * 0.000001f;
+	if (m_deceleration != 999999.0f) {
+		m_deceleration = m_deceleration * 0.000001f;
 	}
-	m_canMove = m_unk0x2c != 0.0f || m_unk0x30 != 0.0f || (m_flag & 6) != 0 || (m_flag & 0x1000) != 0;
+	m_canMove = m_maxSpeed != 0.0f || m_maxZSpeed != 0.0f || (m_flag & 6) != 0 || (m_flag & 0x1000) != 0;
 	if (extended && (m_randomSpeed != 0.0f || m_randomZSpeed != 0.0f)) {
 		m_canMove = 1;
 	}
