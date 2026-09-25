@@ -187,6 +187,10 @@ target_compile_definitions(alien_core PUBLIC
 add_executable(res_probe "${CMAKE_CURRENT_SOURCE_DIR}/tools/res_probe.cpp")
 target_compile_features(res_probe PRIVATE cxx_std_20)
 
+add_executable(test_constants "${CMAKE_CURRENT_SOURCE_DIR}/tools/test_constants.cpp")
+target_compile_features(test_constants PRIVATE cxx_std_20)
+target_link_libraries(test_constants PRIVATE alien_core)
+
 option(ALIEN_MULTIPLAYER
     "Co-op AS1 support and dedicated server" OFF)
 if(ALIEN_MULTIPLAYER)

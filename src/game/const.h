@@ -9,6 +9,7 @@ class RESOURCE;
 
 class CONSTS {
 public:
+	CONSTS() = default;
 	CONSTS(RESOURCE* p_res);
 
 	union { float m_maxScrollSpeedX; float m_unk0x00; };             // 0x00
