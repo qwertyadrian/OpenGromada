@@ -103,51 +103,68 @@ void LOGIC::SetActionN(int p_n, int p_value)
 // STUB: ALIEN 0x41f450
 int LOGIC::LoadLGC(const STRING& p_name)
 {
-	FILE* file = *p_name.m_str ? Platform_FOpen(p_name.m_str, "rb") : 0;
 	Release();
 	m_name = p_name;
-	if (!file) {
-		Error(7, empty_str, 0);
+	m_line = 0;
+	m_hadError = false;
+	m_lastErrorMessage = "";
+
+	FILE* file = nullptr;
+	try {
+		file = *p_name.m_str ? Platform_FOpen(p_name.m_str, "rb") : nullptr;
+		if (!file) {
+			Error(7, p_name.m_str, 0);
+			return 1;
+		}
+		int size = compat_filelength(file);
+		m_stackData = new char[256000];
+		if (!m_stackData) {
+			// STRING: ALIEN 0x483128
+			Error(2, "data", 0);
+			exit(1);
+		}
+		m_unk0x44 = new char[size + 4096];
+		if (!m_unk0x44) {
+			// STRING: ALIEN 0x483124
+			Error(2, "ini", 0);
+			exit(1);
+		}
+		m_pos = (char*) m_unk0x44 + 4066;
+		m_end = m_pos + size;
+		fread(m_pos, 1, size, file);
+		fclose(file);
+		file = nullptr;
+		if (m_stack.m_max < 128) {
+			LOGICSTACK* oldData = (LOGICSTACK*) m_stack.m_data;
+			LOGICSTACK* newData = new LOGICSTACK[128];
+			m_stack.m_data = (int*) newData;
+			if (!newData) {
+				MYERROR::LogExit(::Error, "!!!ERROR!!!::LIST: Not enough memory %i", 128);
+			}
+			if (oldData) {
+				for (int i = 0; i < m_stack.m_max; ++i) {
+					LOGICSTACK& item = ((LOGICSTACK*) m_stack.m_data)[i];
+					item = oldData[i];
+				}
+				delete[] oldData;
+			}
+			m_stack.m_max = 128;
+		}
+		m_variables.NAMED_LIST_LOGICVAR_BASE::Expand(128);
+		while (!func()) {
+		}
+	}
+	catch (const LOGIC_PARSE_ERROR& e) {
+		if (file) {
+			fclose(file);
+		}
+		delete[] (char*) m_unk0x44;
+		m_unk0x44 = 0;
+		m_strings.Release();
+		Release();
+		m_hadError = true;
 		return 1;
 	}
-	int size = compat_filelength(file);
-	m_stackData = new char[256000];
-	if (!m_stackData) {
-		// STRING: ALIEN 0x483128
-		Error(2, "data", 0);
-		exit(1);
-	}
-	m_unk0x44 = new char[size + 4096];
-	if (!m_unk0x44) {
-		// STRING: ALIEN 0x483124
-		Error(2, "ini", 0);
-		exit(1);
-	}
-	m_pos = (char*) m_unk0x44 + 4066;
-	m_end = m_pos + size;
-	fread(m_pos, 1, size, file);
-	if (m_stack.m_max < 128) {
-		LOGICSTACK* oldData = (LOGICSTACK*) m_stack.m_data;
-		LOGICSTACK* newData = new LOGICSTACK[128];
-		m_stack.m_data = (int*) newData;
-		if (!newData) {
-			MYERROR::LogExit(::Error, "!!!ERROR!!!::LIST: Not enough memory %i", 128);
-		}
-		if (oldData) {
-			for (int i = 0; i < m_stack.m_max; ++i) {
-				LOGICSTACK& item = ((LOGICSTACK*) m_stack.m_data)[i];
-				item = oldData[i];
-			}
-			delete[] oldData;
-		}
-		m_stack.m_max = 128;
-	}
-	m_variables.NAMED_LIST_LOGICVAR_BASE::Expand(128);
-	m_line = 0;
-	while (!func()) {
-	}
-
-
 
 	MYERROR::Log(
 		::Error,
@@ -179,7 +196,6 @@ int LOGIC::LoadLGC(const STRING& p_name)
 	}
 	delete[] (char*) m_unk0x44;
 	m_unk0x44 = 0;
-	fclose(file);
 	RebuildExternalSignatures();
 	return 0;
 }
@@ -329,6 +345,11 @@ int LOGIC::LoadVar(STREAM* p_stream)
 // FUNCTION: ALIEN 0x41fbe0
 int LOGIC::Error(int p_type, const char* p_word, int p_line)
 {
+	m_hadError = true;
+	char errBuf[256];
+	snprintf(errBuf, sizeof(errBuf), "LOGIC Error %d: '%s' (line %d in %s)", p_type, p_word ? p_word : "", m_line + 1, m_name.m_str);
+	m_lastErrorMessage = errBuf;
+
 	// STRING: ALIEN 0x483140
 	int result = MYERROR::Error(::Error, "LOGIC '%s' line %i", p_type, p_word, p_line, m_name.m_str, m_line + 1);
 	if (m_pos) {
@@ -349,6 +370,9 @@ int LOGIC::Error(int p_type, const char* p_word, int p_line)
 		}
 		buf[60] = 0;
 		result = MYERROR::Error(::Error, "LOGIC", 10, buf, 0);
+	}
+	if (!m_abortOnError) {
+		throw LOGIC_PARSE_ERROR(errBuf);
 	}
 	return result;
 }
@@ -2050,8 +2074,9 @@ int LOGIC::func()
 		int oldLine = m_line;
 		int oldConditionalDepth = m_unk0x4c;
 
-		m_unk0x44 = new char[size + 4096];
-		if (!m_unk0x44) {
+		char* newBuf = new char[size + 4096];
+		if (!newBuf) {
+			fclose(file);
 			Error(
 				2,
 				// STRING: ALIEN 0x483524
@@ -2060,17 +2085,30 @@ int LOGIC::func()
 			);
 			exit(1);
 		}
+		m_unk0x44 = newBuf;
 		m_pos = (char*) m_unk0x44 + 4066;
 		m_end = m_pos + size;
 		fread(m_pos, size, 1, file);
+		fclose(file);
 		m_line = 0;
 		m_name = fileName;
 		m_unk0x4c = 0;
-		while (!func()) {
+		try {
+			while (!func()) {
+			}
+		}
+		catch (...) {
+			delete[] newBuf;
+			m_pos = oldPos;
+			m_end = oldEnd;
+			m_unk0x44 = oldBuffer;
+			m_line = oldLine;
+			m_unk0x4c = oldConditionalDepth;
+			m_name = oldName;
+			throw;
 		}
 
-		fclose(file);
-		delete[] (char*) m_unk0x44;
+		delete[] newBuf;
 		m_pos = oldPos;
 		m_end = oldEnd;
 		m_unk0x44 = oldBuffer;

@@ -124,11 +124,30 @@ int LocolandMinimumArgs(unsigned int p_raw)
 	switch (p_raw) {
 	case 70: return 3;
 	case 72: return 4;
+	case 81: return 1;
 	case 102: return 1;
 	case 103: return 0;
+	case 210: return 2;
+	case 211: return 5;
 	case 212: return 2;
-
-	case 210: case 211: case 248: return -1;
+	case 230: return 2;
+	case 231: return 4;
+	case 239: return 3;
+	case 240: return 1;
+	case 241: return 0;
+	case 242: return 3;
+	case 243: return 5;
+	case 244: return 0;
+	case 245: return 0;
+	case 246: return 1;
+	case 247: return 1;
+	case 248: return 5;
+	case 249: return 3;
+	case 250: return 1;
+	case 251: return 2;
+	case 252: return 1;
+	case 253: return 3;
+	case 254: return 2;
 	default: return -2;
 	}
 }

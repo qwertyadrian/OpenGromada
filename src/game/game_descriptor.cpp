@@ -517,6 +517,10 @@ bool Game_SetCliOverride(const char* p_name)
 	g_cliOverride = game->m_id;
 	return true;
 }
+const GAME_DESCRIPTOR* Game_FindDescriptor(const char* p_name)
+{
+	return ByName(p_name);
+}
 void Game_SetConfigOverride(const char* p_name)
 {
 	g_configOverride = p_name ? p_name : "";

@@ -9,8 +9,13 @@
 
 #include <cstring>
 #include <cstdint>
+#include <stdexcept>
 #include <utility>
 #include <vector>
+
+struct LOGIC_PARSE_ERROR : public std::runtime_error {
+	explicit LOGIC_PARSE_ERROR(const char* p_msg) : std::runtime_error(p_msg) {}
+};
 
 namespace LOGIC_BYTECODE
 {
@@ -69,6 +74,13 @@ public:
 
 	bool m_runtimeFault = false;
 	int m_runtimeOffset = -1;
+	bool m_abortOnError = true;
+	bool m_hadError = false;
+	STRING m_lastErrorMessage;
+
+	void SetAbortOnError(bool p_abort) { m_abortOnError = p_abort; }
+	bool HadError() const { return m_hadError; }
+	const STRING& LastErrorMessage() const { return m_lastErrorMessage; }
 
 	LOGIC()
 	{

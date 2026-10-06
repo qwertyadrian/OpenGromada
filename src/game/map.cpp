@@ -1981,6 +1981,11 @@ VID** MAP::ExecFunc(int p_cmd)
 		}
 		return 0;
 	}
+	case 81: { // script: ReCalcGridZ(unit)
+		SPRITE* sprite = (SPRITE*) m_logic.m_stack.PopObject();
+		(void) sprite;
+		return 0;
+	}
 	case 82: { // script: AddCommand(unit, action, var1, var2, var3)
 		decomp_intptr var3 = ((LOGICSTACK*) m_logic.m_stack.m_data)[--m_logic.m_stack.m_n].Value();
 		decomp_intptr var2 = ((LOGICSTACK*) m_logic.m_stack.m_data)[--m_logic.m_stack.m_n].Value();
@@ -3345,12 +3350,36 @@ VID** MAP::ExecFunc(int p_cmd)
 		PushStr(PopStr()->ToBase64(key));
 		return 0;
 	}
-	case 210: // script: StoreSetAchievement(achievement_id)
+	case 210: { // script: GetStatistics(narmy, stat) | StoreSetAchievement(achievement_id)
+		if (locoland) {
+			int stat = PopInt();
+			int narmy = PopInt();
+			(void) stat;
+			(void) narmy;
+			PushInt(0);
+			return 0;
+		}
 		Platform_StoreSetAchievement(PopStr()->m_str);
 		return 0;
-	case 211: // script: StoreGetAchievement(achievement_id)
+	}
+	case 211: { // script: CalcStatistics(begx, begy, endx, endy, stat) | StoreGetAchievement(achievement_id)
+		if (locoland) {
+			int stat = PopInt();
+			int endy = PopInt();
+			int endx = PopInt();
+			int begy = PopInt();
+			int begx = PopInt();
+			(void) stat;
+			(void) endy;
+			(void) endx;
+			(void) begy;
+			(void) begx;
+			PushInt(0);
+			return 0;
+		}
 		PushInt(Platform_StoreGetAchievement(PopStr()->m_str));
 		return 0;
+	}
 	case 213: // script: StoreResetAllStats()
 		if (GameDesc->m_unitCountLayers > 0) {
 			PushInt(Legacy_CountUnitsInMap(this, GameDesc->m_unitCountLayers));
@@ -3458,6 +3487,14 @@ VID** MAP::ExecFunc(int p_cmd)
 			PushInt(0);
 			return 0;
 		}
+	}
+	case 230: { // script: GetRailway(x, y)
+		int y = PopInt();
+		int x = PopInt();
+		(void) y;
+		(void) x;
+		m_logic.PushObject(0);
+		return 0;
 	}
 	case 231: {
 		if (Game_IsZS1()) {
@@ -3596,6 +3633,19 @@ VID** MAP::ExecFunc(int p_cmd)
 
 		PopInt();
 		return 0;
+	case 248: { // script: PatrolEngineToPoints(train, x, y, x2, y2)
+		int y2 = PopInt();
+		int x2 = PopInt();
+		int y = PopInt();
+		int x = PopInt();
+		SPRITE* train = (SPRITE*) PopObject();
+		(void) y2;
+		(void) x2;
+		(void) y;
+		(void) x;
+		(void) train;
+		return 0;
+	}
 	case 249: { // script: AddUnitLimit(limit, vid, index) - set a per-vid unit cap
 		int index = PopInt();
 		VID* vid = PopVid(
@@ -3630,15 +3680,24 @@ VID** MAP::ExecFunc(int p_cmd)
 	case 252: // script: GetMoney(army)
 		PushInt((int) Player(PopInt())->GetMoney());
 		return 0;
-	case 253: // script: reserved - consumes two ints and an object
-		PopInt();
-		PopInt();
-		PopObject();
+	case 253: { // script: CanMoveEngineTo(engine, x, y)
+		int y = PopInt();
+		int x = PopInt();
+		SPRITE* engine = (SPRITE*) PopObject();
+		(void) y;
+		(void) x;
+		(void) engine;
+		PushInt(1);
 		return 0;
-	case 254: // script: reserved - consumes two objects
-		PopObject();
-		PopObject();
+	}
+	case 254: { // script: CanAttackEngine(engine, enemy)
+		SPRITE* enemy = (SPRITE*) PopObject();
+		SPRITE* engine = (SPRITE*) PopObject();
+		(void) enemy;
+		(void) engine;
+		PushInt(1);
 		return 0;
+	}
 	default:
 		m_logic.RuntimeError("unsupported external command", p_cmd);
 		return 0;

@@ -120,6 +120,7 @@ inline bool Game_IsZS1()
 
 void Game_SetCliOverride(GAME_ID p_id);
 bool Game_SetCliOverride(const char* p_name);
+const GAME_DESCRIPTOR* Game_FindDescriptor(const char* p_name);
 void Game_SetConfigOverride(const char* p_name);
 void Game_SetProbeJson(bool p_enabled);
 bool Game_WantsProbeJson();
