@@ -195,6 +195,10 @@ add_executable(test_lgc "${CMAKE_CURRENT_SOURCE_DIR}/tools/test_lgc.cpp")
 target_compile_features(test_lgc PRIVATE cxx_std_20)
 target_link_libraries(test_lgc PRIVATE alien_core)
 
+add_executable(test_rail "${CMAKE_CURRENT_SOURCE_DIR}/tools/test_rail.cpp")
+target_compile_features(test_rail PRIVATE cxx_std_20)
+target_link_libraries(test_rail PRIVATE alien_core)
+
 option(ALIEN_MULTIPLAYER
     "Co-op AS1 support and dedicated server" OFF)
 if(ALIEN_MULTIPLAYER)

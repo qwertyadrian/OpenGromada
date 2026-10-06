@@ -99,25 +99,23 @@ TRAIN_INFO::TRAIN_INFO(const ENGINE* p_engine)
 {
 	m_accelTime = 0;
 	m_speedInc = 0;
-	m_unk0x18 = 10000;
-	m_unk0x20 = 0;
-	m_unk0x1c = 0;
-	m_unk0x3c = 0;
-	m_unk0x28 = 0;
-	m_unk0x30 = 0;
-	m_unk0x2c = 0;
-	m_unk0x14 = 0;
-	m_unk0x24 = 0;
+	m_maxSpeed = 10000;
+	m_currentHp = 0;
+	m_carCount = 0;
+	m_ammoPercent = 0;
+	m_weaponPower = 0;
+	m_ammoCarCount = 0;
+	m_buildTime = 0;
+	m_accelWeight = 0;
+	m_maxHp = 0;
 	// The original masked an uninitialised m_flag. Only bits 0 and 1 are ever
 	// set or read for TRAIN_INFO, so clearing the whole word is equivalent
 	// and removes the uninitialised read.
 	m_flag = 0;
 	m_unk0x04 = 0;
-	m_unk0x34 = 0;
-	m_unk0x38 = 0;
+	m_currentAmmo = 0;
+	m_maxAmmo = 0;
 	m_unk0x08 = TRAIN_INFO_UNSET;
-
-
 
 	std::unordered_set<const ENGINE*> seen;
 	std::vector<const ENGINE*> cars;
@@ -131,9 +129,9 @@ TRAIN_INFO::TRAIN_INFO(const ENGINE* p_engine)
 		return true;
 	};
 	if (!p_engine || !collect(p_engine, true) || !collect(p_engine->m_prevEngine, false)) {
-		m_unk0x18 = 0;
+		m_maxSpeed = 0;
 		m_unk0x08 = 0;
-		m_unk0x3c = 100;
+		m_ammoPercent = 100;
 		if (Map) {
 			Map->m_logic.RuntimeError("invalid cyclic train links while calculating train properties");
 		}
@@ -145,25 +143,25 @@ TRAIN_INFO::TRAIN_INFO(const ENGINE* p_engine)
 	for (const ENGINE* e : cars) {
 		AddEngine(e);
 	}
-	if (m_unk0x30) {
-		m_unk0x3c /= m_unk0x30;
+	if (m_ammoCarCount) {
+		m_ammoPercent /= m_ammoCarCount;
 	}
 	else {
-		m_unk0x3c = 100;
+		m_ammoPercent = 100;
 	}
 	if (m_unk0x08 == TRAIN_INFO_UNSET) {
 		m_unk0x08 = 0;
 	}
-	float range = m_speedInc - m_unk0x14;
+	float range = m_speedInc - m_accelWeight;
 	if (range != 0.0f) {
-		int ratio = (int) ((range - (m_accelTime - m_unk0x14)) * m_unk0x18 / range);
-		m_unk0x18 = ratio;
+		int ratio = (int) ((range - (m_accelTime - m_accelWeight)) * m_maxSpeed / range);
+		m_maxSpeed = ratio;
 		if (ratio < 5) {
-			m_unk0x18 = 0;
+			m_maxSpeed = 0;
 		}
 	}
-	if (m_unk0x18 == 10000) {
-		m_unk0x18 = 0;
+	if (m_maxSpeed == 10000) {
+		m_maxSpeed = 0;
 	}
 }
 
@@ -175,15 +173,15 @@ void TRAIN_INFO::AddEngine(const ENGINE* p_engine)
 	if (p_engine->m_vid->m_exData->m_unk0x10 != 0.0f) {
 		float speed = p_engine->m_exData ? p_engine->m_exData->m_unk0x20 : p_engine->m_vid->m_unk0x2c;
 		if ((p_engine->m_exData ? p_engine->m_exData->m_unk0x20 : p_engine->m_vid->m_unk0x2c) * 1000.0f <
-			(float) m_unk0x18) {
-			m_unk0x18 =
+			(float) m_maxSpeed) {
+			m_maxSpeed =
 				(int) ((p_engine->m_exData ? p_engine->m_exData->m_unk0x20 : p_engine->m_vid->m_unk0x2c) * 1000.0f);
 		}
 	}
 	m_speedInc += p_engine->m_vid->m_exData->m_unk0x10;
 	m_accelTime += p_engine->m_vid->m_exData->m_unk0x0c;
 	if (p_engine->m_vid->m_exData->m_unk0x10 > 0.0f) {
-		m_unk0x14 += p_engine->m_vid->m_exData->m_unk0x0c;
+		m_accelWeight += p_engine->m_vid->m_exData->m_unk0x0c;
 	}
 
 	if (p_engine->m_vid->m_idx != 45) {
@@ -193,7 +191,7 @@ void TRAIN_INFO::AddEngine(const ENGINE* p_engine)
 		m_flag |= 2;
 	}
 
-	m_unk0x20 += p_engine->m_unk0x54;
+	m_currentHp += p_engine->m_unk0x54;
 
 	int shots = p_engine->m_ammo / 64;
 	int maxAmmo = p_engine->m_vid->GetMaxAmmo();
@@ -216,14 +214,14 @@ void TRAIN_INFO::AddEngine(const ENGINE* p_engine)
 		}
 	}
 	if (maxAmmo && maxAmmo != 999999 && p_engine->m_vid->m_idx != 85) {
-		++m_unk0x30;
-		m_unk0x34 += shots;
-		m_unk0x38 += maxAmmo;
-		m_unk0x3c += 100 * shots / maxAmmo;
+		++m_ammoCarCount;
+		m_currentAmmo += shots;
+		m_maxAmmo += maxAmmo;
+		m_ammoPercent += 100 * shots / maxAmmo;
 	}
 
-	m_unk0x24 += p_engine->m_vid->m_maxHp[(p_engine->m_flag >> 11) & 3];
-	m_unk0x2c += p_engine->m_vid->GetBuildTime();
+	m_maxHp += p_engine->m_vid->m_maxHp[(p_engine->m_flag >> 11) & 3];
+	m_buildTime += p_engine->m_vid->GetBuildTime();
 
 	int fireDamage;
 	if (shots) {
@@ -238,26 +236,26 @@ void TRAIN_INFO::AddEngine(const ENGINE* p_engine)
 	else {
 		fireDamage = 0;
 	}
-	m_unk0x28 += fireDamage;
+	m_weaponPower += fireDamage;
 
 	if (p_engine->m_vid->m_linkVid) {
-		m_unk0x24 += p_engine->m_vid->m_linkVid->m_maxHp[(p_engine->m_flag >> 11) & 3];
+		m_maxHp += p_engine->m_vid->m_linkVid->m_maxHp[(p_engine->m_flag >> 11) & 3];
 		SPRITE* child = p_engine->m_child;
 		if (!child || child->m_vid != p_engine->m_vid->m_linkVid) {
 			if (p_engine->m_vid->m_linkVid->m_entitiesNumber[(p_engine->m_flag >> 11) & 3] >=
 				p_engine->m_vid->m_entitiesNumber[(p_engine->m_flag >> 11) & 3]) {
-				m_unk0x20 += p_engine->m_vid->m_linkVid->m_maxHp[(p_engine->m_flag >> 11) & 3];
+				m_currentHp += p_engine->m_vid->m_linkVid->m_maxHp[(p_engine->m_flag >> 11) & 3];
 			}
 		}
 	}
 	if (p_engine->m_child && p_engine->m_child->m_vid == p_engine->m_vid->m_linkVid) {
 		m_accelTime += p_engine->m_child->m_vid->m_exData->m_unk0x0c;
 		if (p_engine->m_child->m_vid->m_sprClass != 9) {
-			m_unk0x20 += p_engine->m_child->m_unk0x54;
+			m_currentHp += p_engine->m_child->m_unk0x54;
 		}
 		if (p_engine->m_vid->m_exData->m_unk0x10 > 0.0f) {
-			m_unk0x14 += p_engine->m_child->m_vid->m_exData->m_unk0x0c;
+			m_accelWeight += p_engine->m_child->m_vid->m_exData->m_unk0x0c;
 		}
 	}
-	++m_unk0x1c;
+	++m_carCount;
 }

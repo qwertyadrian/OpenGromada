@@ -1275,6 +1275,9 @@ void ENGINE::BreakTrain(float p_x, float p_y)
 
 inline static float DistanceTo(const R_DOT* p_dot, float p_x, float p_y, float p_z)
 {
+	if (!p_dot) {
+		return 1e9f;
+	}
 	float dz = p_dot->m_z - p_z;
 	float dy = p_dot->m_y - p_y;
 	float dx = p_dot->m_x - p_x;
@@ -1316,6 +1319,9 @@ int ENGINE::ForceLink(ENGINE* p_other)
 	tail->m_nextEngine = this;
 	m_prevEngine = tail;
 	R_DOT_REF* tailRef = &tail->m_lastDotRef;
+	if (!tailRef->m_dot || tailRef->m_link < 0 || tailRef->m_link >= tailRef->m_dot->m_noLinks) {
+		return 0;
+	}
 	R_DOT_REF ref;
 	ref.m_dot = tailRef->m_dot->m_links[tailRef->m_link].m_dot;
 	ref.m_pos = tailRef->m_dot->m_links[tailRef->m_link].m_dist - tailRef->m_pos;

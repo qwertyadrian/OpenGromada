@@ -16,6 +16,9 @@
 // STUB: ALIEN 0x413a30
 int VID::Error(int p_type, const char* p_msg, int p_size)
 {
+	if (!::Error) {
+		return 0;
+	}
 	int idx = m_idx;
 	return MYERROR::Error(
 		::Error,
@@ -288,7 +291,7 @@ void VID::LoadParameters(RESOURCE* p_res)
 	start = 0;
 	int firstAni = -1;
 	for (i = 0; i < 17; ++i) {
-		if (!Sound->ValidateSFX(m_aniSfx[i]) && m_idx != -1) {
+		if (Sound && !Sound->ValidateSFX(m_aniSfx[i]) && m_idx != -1) {
 			Error(
 				4,
 				// STRING: ALIEN 0x482b48

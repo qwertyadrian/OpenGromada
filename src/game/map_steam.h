@@ -7,6 +7,7 @@
 
 class MAP_STEAM : public MAP {
 public:
+	MAP_STEAM();
 	MAP_STEAM(STRING& p_argv, SETTINGS* p_settings);
 	virtual ~MAP_STEAM();
 	void DeletePointerToSprite(SPRITE* p_sprite);

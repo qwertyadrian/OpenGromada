@@ -488,7 +488,8 @@ void MAP::SetFlagman(int p_army, SPRITE* p_sprite) const
 // FUNCTION: ALIEN 0x40e620
 MAN* MAP::Flagman(int p_idx) const
 {
-	return (MAN*) (SPRITE*) m_player[p_idx & 3]->m_flagman;
+	PLAYER* player = m_player[p_idx & 3];
+	return player ? (MAN*) (SPRITE*) player->m_flagman : nullptr;
 }
 
 void MAP::GetAudioListener(float* p_x, float* p_y) const
@@ -1308,7 +1309,9 @@ void MAP::LoadVid(RESOURCE* p_res)
 						   vid->m_weaponIdx);
 				m_vids[idx]->m_exData = (VID_EXDATA*) m_weapon;
 			}
-			Graph->DrawLoadBar(m_vids[0]);
+			if (Graph) {
+				Graph->DrawLoadBar(m_vids[0]);
+			}
 		}
 	} while (!p_res->GoNextSub(0x204a424f));
 	int maxX = 0;
@@ -3433,7 +3436,7 @@ VID** MAP::ExecFunc(int p_cmd)
 	case 223: // script: GetUpdateLeaderboardRank()
 		PushInt(Platform_StoreLastUploadRank());
 		return 0;
-	case 212: { // script: TrainInfo(engine, query) | StoreClearAchievement(achievement_id)
+	case 212: { // script: TrainProperty(engine, query) | StoreClearAchievement(achievement_id)
 		if (steamAS1) {
 			Platform_StoreClearAchievement(PopStr()->m_str);
 			return 0;
@@ -3447,41 +3450,42 @@ VID** MAP::ExecFunc(int p_cmd)
 		ENGINE* engine = (ENGINE*) sprite;
 		TRAIN_INFO info(engine);
 		switch (query) {
-		case 1:
-			PushInt(info.m_unk0x18);
+		case 1: // PROP_SPEED
+			PushInt(info.m_maxSpeed);
 			return 0;
-		case 2:
-			PushInt(info.m_unk0x28);
+		case 2: // PROP_WEAPON
+			PushInt(info.m_weaponPower);
 			return 0;
-		case 3: // script: load as a 0..100 percentage
-			PushInt(info.m_unk0x20 * 100 / info.m_unk0x24);
+		case 3: // PROP_LIFE (percentage 0..100)
+			PushInt(info.m_maxHp ? info.m_currentHp * 100 / info.m_maxHp : 100);
 			return 0;
-		case 4:
-			PushInt(info.m_unk0x20);
+		case 4: // PROP_HP
+			PushInt(info.m_currentHp);
 			return 0;
-		case 5:
-			PushInt(info.m_unk0x3c);
+		case 5: // PROP_AMMO
+			PushInt(info.m_ammoPercent);
 			return 0;
-		case 6:
+		case 6: // PROP_ACCELERATE
 			PushInt(info.Acceleration());
 			return 0;
-		case 7:
-			PushInt(info.m_unk0x2c);
+		case 7: // PROP_BUILD_TIME
+			PushInt(info.m_buildTime);
 			return 0;
-		case 9: {
+		case 9: { // PROP_FREE
 			for (ENGINE* e = engine->FirstEngine(); e; e = e->NextEngine()) {
 				if (!e->IsCommand(0)) {
 					PushInt(0);
+					return 0;
 				}
 			}
 			PushInt(1);
 			return 0;
 		}
-		case 10:
-			PushInt(info.m_unk0x34);
+		case 10: // PROP_AMMO_NO
+			PushInt(info.m_currentAmmo);
 			return 0;
-		case 11:
-			PushInt(info.m_unk0x38);
+		case 11: // PROP_AMMO_MAX
+			PushInt(info.m_maxAmmo);
 			return 0;
 		default:
 			PushInt(0);

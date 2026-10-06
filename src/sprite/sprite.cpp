@@ -871,6 +871,9 @@ SPRITE* SPRITE::SeekEnemy()
 // FUNCTION: ALIEN 0x445470
 void SPRITE::PlaySFX(int p_sfx) const
 {
+	if (!Sound) {
+		return;
+	}
 	float listenerX;
 	float listenerY;
 	Map->GetAudioListener(&listenerX, &listenerY);

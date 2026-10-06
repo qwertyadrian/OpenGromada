@@ -182,6 +182,50 @@ static bool ValidateMapHashStorage(RESOURCE& resource, const LEGACY_MAP_HEADER& 
 	return uint64_t(columns) * rows <= 8388608 || resource.Fail("MAP spatial hash is too large");
 }
 
+MAP::MAP()
+{
+	RealCurrentTime = Platform_Ticks();
+	PrevRealCurrentTime = RealCurrentTime - 10;
+	for (int i = 0; i < 256; ++i) {
+		ANGLE::SinTable2[i] = (ANGLE::SinTable[i] * 4096.0f) * 0.00017262212f;
+		ANGLE::CosTable2[i] = (ANGLE::CosTable[i] * 4096.0f) * 0.00017262212f;
+	}
+
+	m_flag = 0x1110a0;
+	m_groundz = 0;
+	m_tempGroundz = 0;
+	m_w = 640.0f;
+	m_h = 480.0f;
+	m_curArmy = 0;
+	m_shiftX = 0.0f;
+	m_weapon = 0;
+	m_noWeapon = 0;
+	m_noVid = 0;
+	m_noTact = 0;
+	m_shiftY = 0.0f;
+	m_speed = 1.0f;
+	m_unk0x30 = RealCurrentTime;
+	m_fps = 0;
+	m_fpsCnt = 0;
+	m_shiftFlag = 1;
+	memset(m_vids, 0, sizeof(m_vids));
+	m_player[0] = 0;
+	m_player[1] = 0;
+	m_player[2] = 0;
+	m_player[3] = 0;
+	m_window = 0;
+	m_quit = 0;
+	m_terrainCamera = 0;
+	m_menuFrameActive = 0;
+	m_menuFrameSavedW = 0;
+	m_menuFrameSavedH = 0;
+	ResetGroundZ();
+	if (!::Error) {
+		::Error = new MYERROR(1);
+	}
+	Map = this;
+}
+
 // STUB: ALIEN 0x408ff0
 MAP::MAP(STRING& p_argv, SETTINGS* p_settings)
 {
@@ -515,13 +559,15 @@ void MAP::DeletePointerToSprite(SPRITE* p_sprite)
 {
 	Net_OnSpriteDeleted(p_sprite);
 	for (int i = 0; i < 4; ++i) {
-		m_player[i]->DeletePointerToSprite(p_sprite);
+		if (m_player[i]) {
+			m_player[i]->DeletePointerToSprite(p_sprite);
+		}
 	}
 	m_logic.m_stack.DeletePointerToObject(p_sprite);
 	m_groups.DeletePointerToSprite(p_sprite);
 
 	if (p_sprite->m_noRef > 1) {
-		if (Hash->m_list.m_n) {
+		if (Hash && Hash->m_list.m_n) {
 			SPRITE* sprite = (SPRITE*) Hash->m_list.m_data[Hash->m_list.m_n - 1];
 			for (int idx = Hash->m_list.m_n - 1; sprite; sprite = (SPRITE*) Hash->m_list.m_data[idx]) {
 				sprite->DeletePointerToSprite(p_sprite);
@@ -678,10 +724,14 @@ void MAP::Release()
 	m_speed = 1.0f;
 	m_fps = 0;
 	m_fpsCnt = 0;
-	((GRAPH*) Graph)->SetWind(25, ANGLE(200));
-	((GRAPH*) Graph)->SetEnvironment(-1);
+	if (Graph) {
+		((GRAPH*) Graph)->SetWind(25, ANGLE(200));
+		((GRAPH*) Graph)->SetEnvironment(-1);
+	}
 	if (m_flag & 0x200) {
-		Mouse->Enable();
+		if (Mouse) {
+			Mouse->Enable();
+		}
 		m_resource.Close();
 	}
 	if (m_flag & 0x100) {

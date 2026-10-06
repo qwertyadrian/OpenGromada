@@ -21,6 +21,10 @@
 #include "sprite/plane_internal.h"
 #include "world/hash_map.h"
 
+MAP_STEAM::MAP_STEAM() : MAP()
+{
+}
+
 // FUNCTION: ALIEN 0x405060
 MAP_STEAM::MAP_STEAM(STRING& p_argv, SETTINGS* p_settings) : MAP(p_argv, p_settings)
 {

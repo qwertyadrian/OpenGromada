@@ -65,6 +65,7 @@ public:
 	static int LayerCount();
 	static int LayerWalkCount();
 
+	MAP();
 	MAP(STRING& p_argv, SETTINGS* p_settings);
 	virtual ~MAP(); // 0x00
 	void DiscardScriptFiles();
